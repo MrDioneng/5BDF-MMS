@@ -8,34 +8,16 @@ if (!isset($_SESSION['department'])) {
     exit;
 }
 
-$showSuccessModal = false;
-
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $description = mysqli_real_escape_string($conn, $_POST['description']);
-    $to_department = mysqli_real_escape_string($conn, $_POST['to_department']);
-    $from_department = $_SESSION['department'];
-    $datetime_sent = date('Y-m-d H:i:s');
-    $file_path = null;
-
-    if (isset($_FILES['file']) && $_FILES['file']['error'] == 0) {
-        $file_tmp = $_FILES['file']['tmp_name'];
-        $file_name = basename($_FILES['file']['name']);
-        $file_dir = "../../uploads/";
-        $file_path = $file_dir . $file_name;
-
-        if (!move_uploaded_file($file_tmp, $file_path)) {
-            $file_path = null;
-        }
-    }
-
-    $sql = "INSERT INTO memos (description, from_department, to_department, datetime_sent, file_path)
-            VALUES ('$description', '$from_department', '$to_department', '$datetime_sent', '$file_path')";
-    if (mysqli_query($conn, $sql)) {
-        $showSuccessModal = true;
-    }
+// Remove second session_start
+if (isset($_SESSION['memo_success'])) {
+    echo "<script>alert('Memo sent successfully!');</script>";
+    unset($_SESSION['memo_success']);
 }
-
+$showSuccessModal = false;
+if (!isset($_SESSION['department'])) {
+    header("Location: ../../index.php");
+    exit;
+}
 // Fetch departments excluding the current department
 $departments = [];
 $current_department = $_SESSION['department'];
@@ -191,7 +173,7 @@ if (isset($_GET['download_memo_id'])) {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="dashboard.php" method="GET" enctype="multipart/form-data">
+                <form action="memo.php" method="POST" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="1" required></textarea>
