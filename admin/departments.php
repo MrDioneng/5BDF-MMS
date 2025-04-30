@@ -336,24 +336,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
-if (isset($_POST['update_department'])) {
-    $id = $_POST['department_id'];
-    $name = $_POST['department_name'];
-
-    $stmt = $conn->prepare("UPDATE departments SET department_name = ? WHERE department_id = ?");
-    $stmt->bind_param("si", $name, $id);
-
-    if ($stmt->execute()) {
-        header("Location: departments.php?status=updated");
-        exit();
-    } else {
-        echo "Error updating record: " . $conn->error;
-    }
-}
-
 // Get departments from database
 $sql = "SELECT * FROM departments";
 $result = $conn->query($sql);
+
+if (isset($_POST['update_department'])) {
+    $department_id = $_POST['department_id'];
+    $department_name = trim($_POST['department_name']);
+
+    if (!empty($department_name)) {
+        $stmt = $conn->prepare("UPDATE departments SET department_name = ? WHERE department_id = ?");
+        $stmt->bind_param("si", $department_name, $department_id);
+        $stmt->execute();
+
+        // Redirect to avoid form resubmission
+        header("Location: departments.php");
+        exit();
+    }
+}
+
+if (isset($_POST['delete_department'])) {
+    $department_id = $_POST['department_id'];
+
+    $stmt = $conn->prepare("DELETE FROM departments WHERE department_id = ?");
+    $stmt->bind_param("i", $department_id);
+    $stmt->execute();
+
+    // Redirect to avoid form resubmission
+    header("Location: departments.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -399,101 +411,103 @@ $result = $conn->query($sql);
 
     <!-- Departments Table -->
     <table class="table table-striped table-bordered" id="departmentsTable">
-    <thead>
-        <tr>
-        <th>Department ID</th>
-        <th>Department Name</th>
-        <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="departmentTable">
-        <?php if ($result->num_rows > 0): ?>
-        <?php while ($row = $result->fetch_assoc()): ?>
+        <thead>
             <tr>
-            <td><?php echo $row['department_id']; ?></td>
-            <td><?php echo $row['department_name']; ?></td>
-            <!-- Action buttons for each department -->
-            <td class="text-center">
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateDepartmentModal">Update</button>
-                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteDepartmentModal">Delete</button>
-            </td>
+            <th>Department ID</th>
+            <th>Department Name</th>
+            <th>Action</th>
             </tr>
-        <?php endwhile; ?>
-        <?php else: ?>
-        <tr>
-            <td colspan="3" class="text-center">No departments present</td>
-        </tr>
-        <?php endif; ?>
-    </tbody>
+        </thead>
+        <tbody id="departmentTable">
+            <?php if ($result->num_rows > 0): ?>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $row['department_id']; ?></td>
+                        <td><?= $row['department_name']; ?></td>
+                        <td class="text-center">
+                            <!-- Update Button -->
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateModal<?= $row['department_id'] ?>">Update</button>
+                            <!-- Delete Button -->
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<?= $row['department_id'] ?>">Delete</button>
+                        </td>
+                    </tr>
+
+                    <!-- Update Modal for this department -->
+                    <div class="modal fade" id="updateModal<?= $row['department_id'] ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form method="POST" action="departments.php">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title">Update Department</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                            <input type="hidden" name="department_id" value="<?= $row['department_id'] ?>">
+                            <div class="mb-3">
+                                <label class="form-label">UPDATED Department Name</label>
+                                <input type="text" class="form-control" name="department_name" value="<?= htmlspecialchars($row['department_name']) ?>" required>
+                            </div>
+                            </div>
+                            <div class="modal-footer">
+                            <button type="submit" name="update_department" class="btn btn-primary">Update</button>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                    </div>
+
+                    <!-- Delete Modal for this department -->
+                    <div class="modal fade" id="deleteModal<?= $row['department_id'] ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form method="POST" action="departments.php">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title">Delete Department</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                            Are you sure you want to delete "<strong><?= htmlspecialchars($row['department_name']) ?></strong>"?
+                            <input type="hidden" name="department_id" value="<?= $row['department_id'] ?>">
+                            </div>
+                            <div class="modal-footer">
+                            <button type="submit" name="delete_department" class="btn btn-danger">Delete</button>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                    </div>
+
+                <?php endwhile; ?>
+                <?php else: ?>
+                <tr>
+                    <td colspan="3" class="text-center">No departments present</td>
+                </tr>
+                <?php endif; ?>
+        </tbody>
     </table>
   </div>
-  
-<!-- Modal to add Department -->
-  <div class="modal fade" id="addDepartmentModal" tabindex="-1">
+
+    <!-- Modal to add Department -->
+    <div class="modal fade" id="addDepartmentModal" tabindex="-1">
     <div class="modal-dialog">
-      <form class="modal-content" method="POST" action="departments.php">
+        <form class="modal-content bg-white rounded" method="POST" action="departments.php">
         <div class="modal-header">
-          <h5 class="modal-title">Add Department</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <h5 class="modal-title">Add Department</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input type="hidden" name="action" value="add_department">
-          <div class="mb-3">
+            <input type="hidden" name="action" value="add_department">
+            <div class="mb-3">
             <label>Department Name</label>
             <input type="text" name="department_name" class="form-control" required>
-          </div>
+            </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-secondary">Add Department</button>
+            <button type="submit" class="btn btn-secondary">Add Department</button>
         </div>
-      </form>
+        </form>
     </div>
-  </div>
-
-  <!-- Update Department Modal -->
-<div class="modal fade" id="updateDepartmentModal" tabindex="-1" aria-labelledby="updateDepartmentLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="departments.php">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Update Department</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" name="department_id" id="updateDepartmentId">
-          <div class="mb-3">
-            <label for="updateDepartmentName" class="form-label">Department Name</label>
-            <input type="text" class="form-control" name="department_name" id="updateDepartmentName" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" name="update_department" class="btn btn-primary">Update</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Delete Department Modal -->
-<div class="modal fade" id="deleteDepartmentModal" tabindex="-1" aria-labelledby="deleteDepartmentLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="delete_department.php">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Delete Department</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Are you sure you want to delete this department?
-          <input type="hidden" name="department_id" id="deleteDepartmentId">
-        </div>
-        <div class="modal-footer">
-          <button type="submit" name="delete_department" class="btn btn-danger">Delete</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
+    </div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
