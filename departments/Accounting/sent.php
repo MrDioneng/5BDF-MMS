@@ -3,78 +3,26 @@ session_start();
 require_once '../../db/dbcon.php';
 date_default_timezone_set('Asia/Manila');
 
-if (!isset($_SESSION['department'])) {
-    header("Location: ../../index.php");
-    exit;
-}
+// Get the sent memos
+$sql = "SELECT * FROM memos WHERE from_department = ? ORDER BY datetime_sent DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $_SESSION['department']);
+$stmt->execute();
+$result = $stmt->get_result();
 
-$showSuccessModal = false;
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $description = mysqli_real_escape_string($conn, $_POST['description']);
-    $to_department = mysqli_real_escape_string($conn, $_POST['to_department']);
-    $from_department = $_SESSION['department'];
-    $datetime_sent = date('Y-m-d H:i:s');
-    $file_path = null;
-
-    if (isset($_FILES['file']) && $_FILES['file']['error'] == 0) {
-        $file_tmp = $_FILES['file']['tmp_name'];
-        $file_name = basename($_FILES['file']['name']);
-        $file_dir = "../../uploads/";
-        $file_path = $file_dir . $file_name;
-
-        if (!move_uploaded_file($file_tmp, $file_path)) {
-            $file_path = null;
-        }
-    }
-
-    $sql = "INSERT INTO memos (description, from_department, to_department, datetime_sent, file_path)
-            VALUES ('$description', '$from_department', '$to_department', '$datetime_sent', '$file_path')";
-    if (mysqli_query($conn, $sql)) {
-        $showSuccessModal = true;
-    }
-}
-
-// Fetch departments excluding the current department
-$departments = [];
-$current_department = $_SESSION['department'];
-$result = mysqli_query($conn, "SELECT department_name FROM departments WHERE department_name != '$current_department' GROUP BY department_name");
-while ($row = mysqli_fetch_assoc($result)) {
-    $departments[] = $row['department_name'];
-}
-
-// Fetch memos
+// Fetch memos into an array
 $memos = [];
-$memo_result = mysqli_query($conn, "SELECT * FROM memos WHERE to_department = '$current_department' ORDER BY datetime_sent DESC");
-while ($row = mysqli_fetch_assoc($memo_result)) {
-    $memos[] = $row;
+while ($memo = $result->fetch_assoc()) {
+    $memos[] = $memo;
 }
 
-// Handle memo file download
+// Check if memo is downloaded
 if (isset($_GET['download_memo_id'])) {
     $memo_id = $_GET['download_memo_id'];
-
-    // Update the memo as downloaded in the database
-    $update_sql = "UPDATE memos SET is_downloaded = 1 WHERE memo_id = $memo_id";
-    if (mysqli_query($conn, $update_sql)) {
-        // Fetch the file path for the memo
-        $file_sql = "SELECT file_path FROM memos WHERE memo_id = $memo_id";
-        $file_result = mysqli_query($conn, $file_sql);
-        $file_row = mysqli_fetch_assoc($file_result);
-
-        if ($file_row && file_exists($file_row['file_path'])) {
-            // Trigger the file download
-            header("Content-Type: application/octet-stream");
-            header("Content-Disposition: attachment; filename=" . basename($file_row['file_path']));
-            readfile($file_row['file_path']);
-            
-            // After download, reload the page to reflect the changes
-            echo '<script>window.location.href = window.location.href;</script>';
-            exit;
-        }
-    }
+    // Handle the download logic
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -134,17 +82,16 @@ if (isset($_GET['download_memo_id'])) {
 <div class="container my-4">
     <div class="row mb-3 align-items-center">
         <div class="col-md-4">
-            <h2 class="m-0">Memo</h2>
+            <h2 class="m-0">Sent Memo</h2>
         </div>
         <div class="col-md-4 text-center">
             <input type="text" class="form-control" id="searchInput" placeholder="Search Memo..." onkeyup="filterMemos()">
         </div>
         <div class="col-md-4 text-end">
-            <a href="./sent.php" class="btn btn-secondary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
-                    <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z"/>
-                    <path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z"/>
-                    <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/>
+            <a href="./dashboard.php" class="btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-journal" viewBox="0 0 16 16">
+                  <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+                  <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
                 </svg>
             </a>
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
@@ -155,40 +102,40 @@ if (isset($_GET['download_memo_id'])) {
         </div>
     </div>
 
-    <table class="table table-striped table-bordered" id="memosTable">
-        <thead>
-            <tr>
-                <th>Description</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Date and Time</th>
-                <th>File</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (count($memos) > 0): ?>
-                <?php foreach ($memos as $memo): ?>
-                    <tr>
-                        <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
-                            <?= htmlspecialchars($memo['description']) ?>
-                        </td>
-                        <td><?= htmlspecialchars($memo['from_department']) ?></td>
-                        <td><?= htmlspecialchars($memo['to_department']) ?></td>
-                        <td><?= date('Y-m-d H:i:s', strtotime($memo['datetime_sent'])) ?></td>
-                        <td>
-                            <?php if ($memo['file_path']): ?>
-                                <a href="?download_memo_id=<?= $memo['memo_id'] ?>" class="btn btn-primary">Download</a>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="5" class="text-center">No memos found.</td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
+  <table class="table table-striped table-bordered" id="memosTable">
+      <thead>
+          <tr>
+              <th>Description</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Date and Time</th>
+              <th>File</th>
+          </tr>
+      </thead>
+      <tbody>
+          <?php if (count($memos) > 0): ?>
+              <?php foreach ($memos as $memo): ?>
+                  <tr>
+                      <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                          <?= htmlspecialchars($memo['description']) ?>
+                      </td>
+                      <td><?= htmlspecialchars($memo['from_department']) ?></td> <!-- From column added here -->
+                      <td><?= htmlspecialchars($memo['to_department']) ?></td>
+                      <td><?= date('Y-m-d H:i:s', strtotime($memo['datetime_sent'])) ?></td>
+                      <td>
+                          <?php if ($memo['file_path']): ?>
+                              <a href="?download_memo_id=<?= $memo['memo_id'] ?>" class="btn btn-primary">Download</a>
+                          <?php endif; ?>
+                      </td>
+                  </tr>
+              <?php endforeach; ?>
+          <?php else: ?>
+              <tr>
+                  <td colspan="5" class="text-center">No memos found.</td>
+              </tr>
+          <?php endif; ?>
+      </tbody>
+  </table>
 </div>
 
 <!-- Modal -->
@@ -234,14 +181,12 @@ function filterMemos() {
 
     for (let i = 1; i < tr.length; i++) {
         let tdDescription = tr[i].getElementsByTagName("td")[0]; // Description column
-        let tdFrom = tr[i].getElementsByTagName("td")[1];         // From column
-        let tdTo = tr[i].getElementsByTagName("td")[2];           // To column
-        let tdDate = tr[i].getElementsByTagName("td")[3];         // Date column
-        let tdFile = tr[i].getElementsByTagName("td")[4];         // File column
+        let tdTo = tr[i].getElementsByTagName("td")[1];           // To column
+        let tdDate = tr[i].getElementsByTagName("td")[2];         // Date column
+        let tdFile = tr[i].getElementsByTagName("td")[3];         // File column
         
-        if (tdDescription || tdFrom || tdTo || tdDate || tdFile) {
+        if (tdDescription || tdTo || tdDate || tdFile) {
             let descriptionText = tdDescription.textContent || tdDescription.innerText;
-            let fromText = tdFrom.textContent || tdFrom.innerText;
             let toText = tdTo.textContent || tdTo.innerText;
             let dateText = tdDate.textContent || tdDate.innerText;
             let fileText = tdFile.textContent || tdFile.innerText;
@@ -249,7 +194,6 @@ function filterMemos() {
             // Check if any of the columns contain the search term
             if (
                 descriptionText.toUpperCase().includes(filter) || 
-                fromText.toUpperCase().includes(filter) || 
                 toText.toUpperCase().includes(filter) || 
                 dateText.toUpperCase().includes(filter) || 
                 fileText.toUpperCase().includes(filter)
@@ -262,6 +206,7 @@ function filterMemos() {
     }
 }
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
 </body>
 </html>
