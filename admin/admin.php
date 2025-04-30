@@ -110,8 +110,6 @@ $users = $stmt->get_result();
     </ul>
   </nav>
   <div>
-    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createModal">Create</button>
-    <button class="btn btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#searchModal">Search</button>
     <button class="btn btn-outline-danger ms-2" onclick="window.location.href='../index.php'">Logout</button>
   </div>
 </header>
@@ -246,31 +244,6 @@ $users = $stmt->get_result();
       </div>
       <div class="modal-footer">
         <button type="submit" class="btn btn-secondary">Add Department</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Search Modal -->
-<div class="modal fade" id="searchModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form class="modal-content" method="GET" action="admin.php">
-      <div class="modal-header">
-        <h5 class="modal-title">Search User</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label>Search Full Name</label>
-          <input type="text" name="search" class="form-control" value="<?= htmlspecialchars($search_term) ?>" placeholder="Enter full name">
-        </div>
-        <div class="mb-3">
-          <label>Search Department</label>
-          <input type="text" name="department" class="form-control" value="<?= htmlspecialchars($department_term) ?>" placeholder="Enter department">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Search</button>
       </div>
     </form>
   </div>

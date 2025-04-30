@@ -336,12 +336,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
+if (isset($_POST['update_department'])) {
+    $id = $_POST['department_id'];
+    $name = $_POST['department_name'];
+
+    $stmt = $conn->prepare("UPDATE departments SET department_name = ? WHERE department_id = ?");
+    $stmt->bind_param("si", $name, $id);
+
+    if ($stmt->execute()) {
+        header("Location: departments.php?status=updated");
+        exit();
+    } else {
+        echo "Error updating record: " . $conn->error;
+    }
+}
+
 // Get departments from database
 $sql = "SELECT * FROM departments";
 $result = $conn->query($sql);
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -367,8 +380,6 @@ $result = $conn->query($sql);
       </ul>
     </nav>
     <div>
-      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createModal">Create</button>
-      <button class="btn btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#searchModal">Search</button>
       <button class="btn btn-outline-danger ms-2" onclick="window.location.href='../index.php'">Logout</button>
     </div>
   </header>
@@ -387,30 +398,37 @@ $result = $conn->query($sql);
     </div>
 
     <!-- Departments Table -->
-<table class="table table-striped table-bordered">
-  <thead>
-    <tr>
-      <th>Department ID</th>
-      <th>Department Name</th>
-    </tr>
-  </thead>
-  <tbody id="departmentTable">
-    <?php if ($result->num_rows > 0): ?>
-      <?php while ($row = $result->fetch_assoc()): ?>
+    <table class="table table-striped table-bordered" id="departmentsTable">
+    <thead>
         <tr>
-          <td><?php echo $row['department_id']; ?></td>
-          <td><?php echo $row['department_name']; ?></td>
+        <th>Department ID</th>
+        <th>Department Name</th>
+        <th>Action</th>
         </tr>
-      <?php endwhile; ?>
-    <?php else: ?>
-      <tr>
-        <td colspan="2" class="text-center">No departments present</td>
-      </tr>
-    <?php endif; ?>
-  </tbody>
-</table>
-
+    </thead>
+    <tbody id="departmentTable">
+        <?php if ($result->num_rows > 0): ?>
+        <?php while ($row = $result->fetch_assoc()): ?>
+            <tr>
+            <td><?php echo $row['department_id']; ?></td>
+            <td><?php echo $row['department_name']; ?></td>
+            <!-- Action buttons for each department -->
+            <td class="text-center">
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateDepartmentModal">Update</button>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteDepartmentModal">Delete</button>
+            </td>
+            </tr>
+        <?php endwhile; ?>
+        <?php else: ?>
+        <tr>
+            <td colspan="3" class="text-center">No departments present</td>
+        </tr>
+        <?php endif; ?>
+    </tbody>
+    </table>
   </div>
+  
+<!-- Modal to add Department -->
   <div class="modal fade" id="addDepartmentModal" tabindex="-1">
     <div class="modal-dialog">
       <form class="modal-content" method="POST" action="departments.php">
@@ -432,24 +450,83 @@ $result = $conn->query($sql);
     </div>
   </div>
 
+  <!-- Update Department Modal -->
+<div class="modal fade" id="updateDepartmentModal" tabindex="-1" aria-labelledby="updateDepartmentLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="departments.php">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Update Department</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="department_id" id="updateDepartmentId">
+          <div class="mb-3">
+            <label for="updateDepartmentName" class="form-label">Department Name</label>
+            <input type="text" class="form-control" name="department_name" id="updateDepartmentName" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" name="update_department" class="btn btn-primary">Update</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+<!-- Delete Department Modal -->
+<div class="modal fade" id="deleteDepartmentModal" tabindex="-1" aria-labelledby="deleteDepartmentLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="delete_department.php">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete Department</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this department?
+          <input type="hidden" name="department_id" id="deleteDepartmentId">
+        </div>
+        <div class="modal-footer">
+          <button type="submit" name="delete_department" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
-  <script>
-    function filterDepartments() {
-      const searchInput = document.getElementById('searchInput').value.toLowerCase();
-      const rows = document.querySelectorAll('#departmentTable tr');
 
-      rows.forEach(row => {
-        const departmentName = row.cells[1].textContent.toLowerCase();
-        if (departmentName.includes(searchInput)) {
-          row.style.display = '';
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+
+<script>
+  function filterDepartments() {
+    let input = document.getElementById("searchInput");
+    let filter = input.value.toUpperCase();
+    let table = document.getElementById("departmentsTable"); // Make sure your table's ID is 'departmentsTable'
+    let tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) { // skip header row
+      let tdID = tr[i].getElementsByTagName("td")[0];
+      let tdName = tr[i].getElementsByTagName("td")[1];
+
+      if (tdID || tdName) {
+        let idText = tdID.textContent || tdID.innerText;
+        let nameText = tdName.textContent || tdName.innerText;
+
+        if (
+          idText.toUpperCase().includes(filter) ||
+          nameText.toUpperCase().includes(filter)
+        ) {
+          tr[i].style.display = "";
         } else {
-          row.style.display = 'none';
+          tr[i].style.display = "none";
         }
-      });
+      }
     }
-  </script>
+  }
+</script>
+
+
 </body>
 </html>
 
