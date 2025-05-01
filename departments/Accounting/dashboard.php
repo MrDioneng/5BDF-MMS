@@ -176,9 +176,15 @@ if (isset($_GET['download_memo_id'])) {
                         <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
                             <?= htmlspecialchars($memo['description']) ?>
                         </td>
-                        <td><?= htmlspecialchars($memo['from_department']) ?></td>
-                        <td><?= htmlspecialchars($memo['to_department']) ?></td>
-                        <td><?= date('Y-m-d H:i:s', strtotime($memo['datetime_sent'])) ?></td>
+                        <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                            <?= htmlspecialchars($memo['from_department']) ?>
+                        </td>
+                        <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                            <?= htmlspecialchars($memo['to_department']) ?>
+                        </td>
+                        <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                            <?= date('Y-m-d H:i:s', strtotime($memo['datetime_sent'])) ?>
+                        </td>
                         <td>
                             <?php if ($memo['file_path']): ?>
                                 <a href="?download_memo_id=<?= $memo['memo_id'] ?>" class="btn btn-primary">Download</a>

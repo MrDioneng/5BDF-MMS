@@ -201,13 +201,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                                 <tbody>
                                     <?php if (count(\$memos) > 0): ?>
                                         <?php foreach (\$memos as \$memo): ?>
-                                            <tr>
+                                           <tr>
                                                 <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
                                                     <?= htmlspecialchars(\$memo['description']) ?>
                                                 </td>
-                                                <td><?= htmlspecialchars(\$memo['from_department']) ?></td>
-                                                <td><?= htmlspecialchars(\$memo['to_department']) ?></td>
-                                                <td><?= date('Y-m-d H:i:s', strtotime(\$memo['datetime_sent'])) ?></td>
+                                                <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                                    <?= htmlspecialchars(\$memo['from_department']) ?>
+                                                </td>
+                                                <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                                    <?= htmlspecialchars(\$memo['to_department']) ?>
+                                                </td>
+                                                <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                                    <?= date('Y-m-d H:i:s', strtotime(\$memo['datetime_sent'])) ?>
+                                                </td>
                                                 <td>
                                                     <?php if (\$memo['file_path']): ?>
                                                         <a href="?download_memo_id=<?= \$memo['memo_id'] ?>" class="btn btn-primary">Download</a>
@@ -474,9 +480,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                                     <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
                                         <?= htmlspecialchars(\$memo['description']) ?>
                                     </td>
-                                    <td><?= htmlspecialchars(\$memo['from_department']) ?></td> <!-- From column added here -->
-                                    <td><?= htmlspecialchars(\$memo['to_department']) ?></td>
-                                    <td><?= date('Y-m-d H:i:s', strtotime(\$memo['datetime_sent'])) ?></td>
+                                    <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                        <?= htmlspecialchars(\$memo['from_department']) ?>
+                                    </td>
+                                    <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                        <?= htmlspecialchars(\$memo['to_department']) ?>
+                                    </td>
+                                    <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                        <?= date('Y-m-d H:i:s', strtotime(\$memo['datetime_sent'])) ?>
+                                    </td>
                                     <td>
                                         <?php if (\$memo['file_path']): ?>
                                             <a href="?download_memo_id=<?= \$memo['memo_id'] ?>" class="btn btn-primary">Download</a>

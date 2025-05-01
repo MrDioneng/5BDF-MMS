@@ -119,19 +119,25 @@ if (isset($_GET['download_memo_id'])) {
       <tbody>
           <?php if (count($memos) > 0): ?>
               <?php foreach ($memos as $memo): ?>
-                  <tr>
-                      <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
-                          <?= htmlspecialchars($memo['description']) ?>
-                      </td>
-                      <td><?= htmlspecialchars($memo['from_department']) ?></td> <!-- From column added here -->
-                      <td><?= htmlspecialchars($memo['to_department']) ?></td>
-                      <td><?= date('Y-m-d H:i:s', strtotime($memo['datetime_sent'])) ?></td>
-                      <td>
-                          <?php if ($memo['file_path']): ?>
-                              <a href="?download_memo_id=<?= $memo['memo_id'] ?>" class="btn btn-primary">Download</a>
-                          <?php endif; ?>
-                      </td>
-                  </tr>
+                <tr>
+                    <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                        <?= htmlspecialchars($memo['description']) ?>
+                    </td>
+                    <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                        <?= htmlspecialchars($memo['from_department']) ?>
+                    </td>
+                    <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                        <?= htmlspecialchars($memo['to_department']) ?>
+                    </td>
+                    <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                        <?= date('Y-m-d H:i:s', strtotime($memo['datetime_sent'])) ?>
+                    </td>
+                    <td>
+                        <?php if ($memo['file_path']): ?>
+                            <a href="?download_memo_id=<?= $memo['memo_id'] ?>" class="btn btn-primary">Download</a>
+                        <?php endif; ?>
+                    </td>
+                </tr>
               <?php endforeach; ?>
           <?php else: ?>
               <tr>
