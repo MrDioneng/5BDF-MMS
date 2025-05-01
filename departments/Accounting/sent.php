@@ -120,16 +120,16 @@ if (isset($_GET['download_memo_id'])) {
           <?php if (count($memos) > 0): ?>
               <?php foreach ($memos as $memo): ?>
                 <tr>
-                    <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                    <td style="<?= $memo['is_downloaded'] ?>">
                         <?= htmlspecialchars($memo['description']) ?>
                     </td>
-                    <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                    <td style="<?= $memo['is_downloaded'] ?>">
                         <?= htmlspecialchars($memo['from_department']) ?>
                     </td>
-                    <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                    <td style="<?= $memo['is_downloaded'] ?>">
                         <?= htmlspecialchars($memo['to_department']) ?>
                     </td>
-                    <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                    <td style="<?= $memo['is_downloaded'] ?>">
                         <?= date('Y-m-d H:i:s', strtotime($memo['datetime_sent'])) ?>
                     </td>
                     <td>

@@ -477,16 +477,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                         <?php if (count(\$memos) > 0): ?>
                             <?php foreach (\$memos as \$memo): ?>
                                 <tr>
-                                    <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                    <td style="<?= \$memo['is_downloaded'] ?>">
                                         <?= htmlspecialchars(\$memo['description']) ?>
                                     </td>
-                                    <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                    <td style="<?= \$memo['is_downloaded'] ?>">
                                         <?= htmlspecialchars(\$memo['from_department']) ?>
                                     </td>
-                                    <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                    <td style="<?= \$memo['is_downloaded'] ?>">
                                         <?= htmlspecialchars(\$memo['to_department']) ?>
                                     </td>
-                                    <td style="<?= \$memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
+                                    <td style="<?= \$memo['is_downloaded'] ?>">
                                         <?= date('Y-m-d H:i:s', strtotime(\$memo['datetime_sent'])) ?>
                                     </td>
                                     <td>
@@ -692,7 +692,7 @@ if (isset($_POST['delete_department'])) {
                 </a>
                 </li>
                 <li class="nav-item">
-                <a href="#" class="nav-link d-flex flex-column align-items-center px-2">
+                <a href="./announcements.php" class="nav-link d-flex flex-column align-items-center px-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-megaphone mb-1" viewBox="0 0 16 16">
                     <path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35c-2.344 1.205-5.209 1.842-8 2.033v4.233q.27.015.537.036c2.568.189 5.093.744 7.463 1.993zm-9 6.215v-4.13a95 95 0 0 1-1.992.052A1.02 1.02 0 0 0 1 7v2c0 .55.448 1.002 1.006 1.009A61 61 0 0 1 4 10.065m-.657.975 1.609 3.037.01.024h.548l-.002-.014-.443-2.966a68 68 0 0 0-1.722-.082z"/>
                     </svg>
@@ -744,26 +744,26 @@ if (isset($_POST['delete_department'])) {
 
                     <!-- Update Modal for this department -->
                     <div class="modal fade" id="updateModal<?= $row['department_id'] ?>" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <form method="POST" action="departments.php">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                            <h5 class="modal-title">Update Department</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <div class="modal-dialog">
+                            <form method="POST" action="departments.php">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title">Update Department</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                <input type="hidden" name="department_id" value="<?= $row['department_id'] ?>">
+                                <div class="mb-3">
+                                    <label class="form-label">UPDATED Department Name</label>
+                                    <input type="text" class="form-control" name="department_name" value="<?= htmlspecialchars($row['department_name']) ?>" required>
+                                </div>
+                                </div>
+                                <div class="modal-footer">
+                                <button type="submit" name="update_department" class="btn btn-primary">Update</button>
+                                </div>
                             </div>
-                            <div class="modal-body">
-                            <input type="hidden" name="department_id" value="<?= $row['department_id'] ?>">
-                            <div class="mb-3">
-                                <label class="form-label">UPDATED Department Name</label>
-                                <input type="text" class="form-control" name="department_name" value="<?= htmlspecialchars($row['department_name']) ?>" required>
-                            </div>
-                            </div>
-                            <div class="modal-footer">
-                            <button type="submit" name="update_department" class="btn btn-primary">Update</button>
-                            </div>
+                            </form>
                         </div>
-                        </form>
-                    </div>
                     </div>
 
                     <!-- Delete Modal for this department -->
@@ -799,24 +799,24 @@ if (isset($_POST['delete_department'])) {
 
     <!-- Modal to add Department -->
     <div class="modal fade" id="addDepartmentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form class="modal-content bg-white rounded" method="POST" action="departments.php">
-        <div class="modal-header">
-            <h5 class="modal-title">Add Department</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" name="action" value="add_department">
-            <div class="mb-3">
-            <label>Department Name</label>
-            <input type="text" name="department_name" class="form-control" required>
+        <div class="modal-dialog">
+            <form class="modal-content bg-white rounded" method="POST" action="departments.php">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <div class="modal-body">
+                <input type="hidden" name="action" value="add_department">
+                <div class="mb-3">
+                <label>Department Name</label>
+                <input type="text" name="department_name" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-secondary">Add Department</button>
+            </div>
+            </form>
         </div>
-        <div class="modal-footer">
-            <button type="submit" class="btn btn-secondary">Add Department</button>
-        </div>
-        </form>
-    </div>
     </div>
 
 

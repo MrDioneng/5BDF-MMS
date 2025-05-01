@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 29, 2025 at 10:48 AM
+-- Generation Time: May 01, 2025 at 07:16 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -24,6 +24,28 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `announcements`
+--
+
+CREATE TABLE `announcements` (
+  `announcement_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL DEFAULT 'ANNOUNCEMENT',
+  `date_created` datetime NOT NULL,
+  `what` text NOT NULL,
+  `where` varchar(255) NOT NULL,
+  `when` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `announcements`
+--
+
+INSERT INTO `announcements` (`announcement_id`, `title`, `date_created`, `what`, `where`, `when`) VALUES
+(1, 'ANNOUNCEMENT', '2025-05-01 07:09:48', 'Election', 'Balamban', '2025-05-01 07:09:48');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `departments`
 --
 
@@ -37,9 +59,9 @@ CREATE TABLE `departments` (
 --
 
 INSERT INTO `departments` (`department_id`, `department_name`) VALUES
-(62, 'Accounting'),
-(63, 'IT'),
-(64, 'Marketing');
+(86, 'Accounting'),
+(104, 'IT'),
+(105, 'Marketing');
 
 -- --------------------------------------------------------
 
@@ -56,6 +78,18 @@ CREATE TABLE `memos` (
   `file_path` varchar(255) DEFAULT NULL,
   `is_downloaded` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `memos`
+--
+
+INSERT INTO `memos` (`memo_id`, `description`, `from_department`, `to_department`, `datetime_sent`, `file_path`, `is_downloaded`) VALUES
+(67, 'Huy IT ', 'Accounting', 'IT', '2025-04-30 15:03:57', '../../uploads/TEST UPLOAD.docx', 1),
+(68, 'Huy IT', 'Accounting', 'IT', '2025-04-30 15:13:40', '../../uploads/TEST UPLOAD.docx', 1),
+(69, 'New Memo', 'Accounting', 'Marketing', '2025-05-01 10:03:18', '../../uploads/TEST UPLOAD.docx', 0),
+(70, 'New Memo', 'Accounting', 'Marketing', '2025-05-01 10:03:25', '../../uploads/TEST UPLOAD.docx', 0),
+(71, 'to Accounting', 'Marketing', 'Accounting', '2025-05-01 10:33:09', '../../uploads/TEST UPLOAD.docx', 1),
+(72, 'to IT New', 'Accounting', 'IT', '2025-05-01 10:37:45', '../../uploads/doc02366820250421135406.pdf', 0);
 
 -- --------------------------------------------------------
 
@@ -82,11 +116,18 @@ INSERT INTO `users` (`user_id`, `UID`, `password`, `full_name`, `department`, `r
 (15, '852', '123', 'Dione Louis Nipaya', 'IT', 'User'),
 (16, '123', '123', 'test', 'Accounting', 'User'),
 (17, '321', '321', 'testtest', 'IT', 'User'),
-(18, '456', '456', 'test-Marketing', 'Marketing', 'User');
+(18, '456', '456', 'test-Marketing', 'Marketing', 'User'),
+(19, '123123123', '123123123', 'Dione Louis Nipaya', 'IT', 'User');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `announcements`
+--
+ALTER TABLE `announcements`
+  ADD PRIMARY KEY (`announcement_id`);
 
 --
 -- Indexes for table `departments`
@@ -112,22 +153,28 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `announcements`
+--
+ALTER TABLE `announcements`
+  MODIFY `announcement_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-  MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT for table `memos`
 --
 ALTER TABLE `memos`
-  MODIFY `memo_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `memo_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
