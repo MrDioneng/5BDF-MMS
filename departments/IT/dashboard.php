@@ -1,5 +1,9 @@
   <?php
   session_start();
+  if (!isset($_SESSION['user_id'])) {
+      header("Location: ../index.php");
+      exit();
+  }
   require_once '../../db/dbcon.php';
   date_default_timezone_set('Asia/Manila');
 
@@ -123,7 +127,7 @@
               </div>
               <div class="col-12 col-md-4 d-flex justify-content-end">
                   <form action="../../index.php" method="POST">
-                      <button type="submit" class="btn btn-outline-light">Log Out</button>
+                      <button class="btn btn-outline-danger ms-2" onclick="window.location.href='logout.php'">Logout</button>
                   </form>
               </div>
           </div>

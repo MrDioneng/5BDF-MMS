@@ -29,6 +29,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $dashboard_content = <<<EOD
                         <?php
                         session_start();
+                        if (!isset(\$_SESSION['user_id'])) {
+                            header("Location: ../index.php");
+                            exit();
+                        }
                         require_once '../../db/dbcon.php';
                         date_default_timezone_set('Asia/Manila');
 
@@ -152,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                                     </div>
                                     <div class="col-12 col-md-4 d-flex justify-content-end">
                                         <form action="../../index.php" method="POST">
-                                            <button type="submit" class="btn btn-outline-light">Log Out</button>
+                                            <button class="btn btn-outline-danger ms-2" onclick="window.location.href='logout.php'">Logout</button>
                                         </form>
                                     </div>
                                 </div>
@@ -347,6 +351,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $sent_content = <<<EOD
                 <?php
                 session_start();
+                if (!isset(\$_SESSION['user_id'])) {
+                    header("Location: ../index.php");
+                    exit();
+                }
                 require_once '../../db/dbcon.php';
                 date_default_timezone_set('Asia/Manila');
 
@@ -418,7 +426,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                             </div>
                             <div class="col-12 col-md-4 d-flex justify-content-end">
                                 <form action="../../index.php" method="POST">
-                                    <button type="submit" class="btn btn-outline-light">Log Out</button>
+                                    <button class="btn btn-outline-danger ms-2" onclick="window.location.href='logout.php'">Logout</button>
                                 </form>
                             </div>
                         </div>
@@ -562,6 +570,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             file_put_contents($sent_file, $sent_content);
         }
 
+        $logout_file = $folder_path . '/logout.php';
+        if (!file_exists($logout_file)) {
+            $logout_content = <<<EOD
+                <?php
+                session_start();
+                session_unset();
+                session_destroy();
+
+                // Prevent caching to disable back button
+                header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+                header("Cache-Control: post-check=0, pre-check=0", false);
+                header("Pragma: no-cache");
+
+                header("Location: ../index.php");
+                exit();
+                ?>
+              EOD;      
+            file_put_contents($logout_file, $logout_content);
+        }
+
         header("Location: departments.php");
         exit;
     } else {
@@ -662,7 +690,7 @@ if (isset($_POST['delete_department'])) {
             </ul>
         </nav>
     <div>
-      <button class="btn btn-outline-danger ms-2" onclick="window.location.href='../index.php'">Logout</button>
+        <button class="btn btn-outline-danger ms-2" onclick="window.location.href='logout.php'">Logout</button>
     </div>
   </header>
 
