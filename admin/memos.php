@@ -1,4 +1,9 @@
 <?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../index.php");
+    exit();
+}
 require_once '../db/dbcon.php';
 
 ?>
@@ -64,7 +69,7 @@ require_once '../db/dbcon.php';
     </ul>
 </nav>
   <div>
-    <button class="btn btn-outline-danger ms-2" onclick="window.location.href='../index.php'">Logout</button>
+    <button class="btn btn-outline-danger ms-2" onclick="window.location.href='logout.php'">Logout</button>
   </div>
 </header>
 
