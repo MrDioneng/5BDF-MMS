@@ -6,6 +6,19 @@ if (!isset($_SESSION['user_id'])) {
 }
 require_once '../db/dbcon.php';
 
+$exam_id = $_GET['exam_id'];
+$sql = "SELECT * FROM exams WHERE exam_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $exam_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    $exam = $result->fetch_assoc();
+} else {
+    echo "No exam found!";
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $exam_id = $_POST['exam_id'];
     $exam_title = $_POST['exam_title'];
@@ -29,19 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-
-$exam_id = $_GET['exam_id'];
-$sql = "SELECT * FROM exams WHERE exam_id = ?";
-$stmt = $conn->prepare($sql);
+$items_query = "SELECT * FROM exam_items WHERE exam_id = ?";
+$stmt = $conn->prepare($items_query);
 $stmt->bind_param("i", $exam_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$items_result = $stmt->get_result();
+$questions = $items_result->fetch_all(MYSQLI_ASSOC);
 
-if ($result->num_rows > 0) {
-    $exam = $result->fetch_assoc();
-} else {
-    echo "No exam found!";
-}
+
 ?>
 
 <!DOCTYPE html>
@@ -190,14 +198,164 @@ if ($result->num_rows > 0) {
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5 class="card-title mb-0">Exam Questions</h5>
-              <button class="btn btn-success" >Add Question</button>
+              <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                Add Question
+              </button>
             </div>
-            <p class="card-text">Number of Questions: <span id="questionCount">0</span></p>
+            <p class="card-text">Number of Questions: <span id="questionCount"><?= count($questions) ?></span></p>
           </div>
-        </div>
+
+          <div style="max-height: 350px; overflow-y: auto;">
+            <?php if (count($questions) > 0): ?>
+              <ol class="pe-2">
+                <?php foreach ($questions as $q): ?>
+                  <li class="mb-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <strong><?= htmlspecialchars($q['question']) ?></strong>
+                      <div>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#questionModal<?= $q['item_id'] ?>">Update</button>
+                        <a href="delete-question.php?id=<?= $q['item_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this question?');">Delete</a>
+                      </div>
+                    </div>
+                    <ul class="mt-2">
+                      <li>A. <?= htmlspecialchars($q['option_a']) ?></li>
+                      <li>B. <?= htmlspecialchars($q['option_b']) ?></li>
+                      <li>C. <?= htmlspecialchars($q['option_c']) ?></li>
+                      <li>D. <?= htmlspecialchars($q['option_d']) ?></li>
+                    </ul>
+                    <p class="text-success"><em>Correct Answer: <?= strtoupper($q['correct_option']) ?></em></p>
+                    <hr>
+                  </li>
+
+                  <!-- Update Question Modal -->
+                  <div class="modal fade" id="questionModal<?= $q['item_id'] ?>" tabindex="-1" aria-labelledby="questionModalLabel<?= $q['item_id'] ?>" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content">
+                        <form action="update-question.php" method="POST">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="questionModalLabel<?= $q['item_id'] ?>">Question Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+
+                          <div class="modal-body">
+                            <input type="hidden" name="item_id" value="<?= $q['item_id'] ?>">
+                            <input type="hidden" name="exam_id" value="<?= $q['exam_id'] ?>">
+
+                            <div class="mb-3">
+                              <label for="questionText<?= $q['item_id'] ?>" class="form-label"><strong>Question</strong></label>
+                              <input type="text" class="form-control" id="questionText<?= $q['item_id'] ?>" name="question" value="<?= htmlspecialchars($q['question']) ?>" required>
+                            </div>
+
+                            <div class="mb-3">
+                              <label for="optionA<?= $q['item_id'] ?>" class="form-label"><strong>Option A</strong></label>
+                              <input type="text" class="form-control" id="optionA<?= $q['item_id'] ?>" name="option_a" value="<?= htmlspecialchars($q['option_a']) ?>" required>
+                            </div>
+
+                            <div class="mb-3">
+                              <label for="optionB<?= $q['item_id'] ?>" class="form-label"><strong>Option B</strong></label>
+                              <input type="text" class="form-control" id="optionB<?= $q['item_id'] ?>" name="option_b" value="<?= htmlspecialchars($q['option_b']) ?>" required>
+                            </div>
+
+                            <div class="mb-3">
+                              <label for="optionC<?= $q['item_id'] ?>" class="form-label"><strong>Option C</strong></label>
+                              <input type="text" class="form-control" id="optionC<?= $q['item_id'] ?>" name="option_c" value="<?= htmlspecialchars($q['option_c']) ?>" required>
+                            </div>
+
+                            <div class="mb-3">
+                              <label for="optionD<?= $q['item_id'] ?>" class="form-label"><strong>Option D</strong></label>
+                              <input type="text" class="form-control" id="optionD<?= $q['item_id'] ?>" name="option_d" value="<?= htmlspecialchars($q['option_d']) ?>" required>
+                            </div>
+
+                            <hr>
+
+                            <div class="mb-3">
+                              <label for="correctOption<?= $q['item_id'] ?>" class="form-label"><strong>Correct Option</strong></label>
+                              <select class="form-select" id="correctOption<?= $q['item_id'] ?>" name="correct_option" required>
+                                <option value="A" <?= $q['correct_option'] === 'A' ? 'selected' : '' ?>>A</option>
+                                <option value="B" <?= $q['correct_option'] === 'B' ? 'selected' : '' ?>>B</option>
+                                <option value="C" <?= $q['correct_option'] === 'C' ? 'selected' : '' ?>>C</option>
+                                <option value="D" <?= $q['correct_option'] === 'D' ? 'selected' : '' ?>>D</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Update</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+
+                <?php endforeach; ?>
+              </ol>
+            <?php endif; ?>
+          </div>
       </div>
     </div>
   </main>
+
+  <!-- Add Question Modal -->
+  <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form action="add-question.php" method="POST">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addQuestionModalLabel">Add New Question</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
+            <div class="mb-3">
+              <label for="question" class="form-label">Question</label>
+              <textarea class="form-control" id="question" name="question" rows="3" required></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="option_a" class="form-label">Option A</label>
+              <input type="text" class="form-control" id="option_a" name="option_a" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="option_b" class="form-label">Option B</label>
+              <input type="text" class="form-control" id="option_b" name="option_b" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="option_c" class="form-label">Option C</label>
+              <input type="text" class="form-control" id="option_c" name="option_c" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="option_d" class="form-label">Option D</label>
+              <input type="text" class="form-control" id="option_d" name="option_d" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="correct_answer" class="form-label">Correct Answer</label>
+              <select class="form-select" id="correct_answer" name="correct_answer" required>
+                <option value="">Select Correct Option</option>
+                <option value="A">Option A</option>
+                <option value="B">Option B</option>
+                <option value="C">Option C</option>
+                <option value="D">Option D</option>
+              </select>
+            </div>
+
+            <input type="hidden" name="exam_id" value="<?php echo $_GET['exam_id']; ?>">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Question</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
 
   
 
