@@ -17,7 +17,7 @@ require_once '../db/dbcon.php';
   <title>Memos</title>
 </head>
 <body>
-  <header class="d-flex flex-wrap align-items-center justify-content-between py-3 px-4 border-bottom">
+<header class="d-flex flex-wrap align-items-center justify-content-between py-2 px-4 border-bottom">
   <div class="d-flex align-items-center gap-2">
     <img src="../img/5bdflogo.png" alt="5BDF Logo" height="50" width="50">
     <h4 class="m-0">Admin</h4>
@@ -50,7 +50,7 @@ require_once '../db/dbcon.php';
         </a>
         </li>
         <li class="nav-item">
-        <a href="#" class="nav-link d-flex flex-column align-items-center px-2">
+        <a href="./memos.php" class="nav-link d-flex flex-column align-items-center px-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-journal mb-1" viewBox="0 0 16 16">
             <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
             <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
@@ -66,8 +66,19 @@ require_once '../db/dbcon.php';
             Announcements
         </a>
         </li>
+        <li class="nav-item">
+          <a href="./Exams.php" class="nav-link d-flex flex-column align-items-center px-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square mb-1" viewBox="0 0 16 16">
+              <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293z"/>
+              <path d="M13.752 4.396l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+              <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+            </svg>
+            Exams
+          </a>
+        </li>
     </ul>
 </nav>
+
   <div>
     <button class="btn btn-outline-danger ms-2" onclick="window.location.href='logout.php'">Logout</button>
   </div>

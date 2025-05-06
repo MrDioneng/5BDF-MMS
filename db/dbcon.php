@@ -1,18 +1,19 @@
 <?php
-$servername = "localhost";  // Database server name
-$username = "root";         // Database username
-$password = "";             // Database password (empty for local environments)
-$database = "5bdf-memo";    // Database name
+$servername = "localhost"; 
+$username = "root";         
+$password = "";          
+$database = "5bdf-memo";   
 
-// Establish connection to the database
-$conn = new mysqli($servername, $username, $password, $database);
-
-// Check the connection
-if ($conn->connect_error) {
-    // If the connection fails, display a detailed error message
-    die("Connection failed: " . $conn->connect_error);
+// Improved error handling using try-catch
+try {
+    $conn = new mysqli($servername, $username, $password, $database);
+    if ($conn->connect_error) {
+        throw new Exception("Connection failed: " . $conn->connect_error);
+    }
+    // Set the character set to utf8mb4 for better handling of multi-byte characters
+    $conn->set_charset("utf8mb4");
+} catch (Exception $e) {
+    // Display error message if connection fails
+    die("Error: " . $e->getMessage());
 }
-
-// Optionally, you can set the character set for the connection (to prevent character encoding issues)
-$conn->set_charset("utf8mb4");
 ?>

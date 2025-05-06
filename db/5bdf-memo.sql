@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 01, 2025 at 07:16 AM
+-- Generation Time: May 05, 2025 at 08:32 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,7 +41,12 @@ CREATE TABLE `announcements` (
 --
 
 INSERT INTO `announcements` (`announcement_id`, `title`, `date_created`, `what`, `where`, `when`) VALUES
-(1, 'ANNOUNCEMENT', '2025-05-01 07:09:48', 'Election', 'Balamban', '2025-05-01 07:09:48');
+(20, 'ANNOUNCEMENT', '2025-05-01 13:47:28', 'test', 'test', '2025-05-01 13:53:00'),
+(21, 'ANNOUNCEMENT', '2025-05-01 13:48:03', 'test2', 'test2', '2025-05-01 13:54:00'),
+(22, 'ANNOUNCEMENT', '2025-05-01 13:49:08', 'test3', 'test3', '2025-05-01 13:51:00'),
+(23, 'ANNOUNCEMENT', '2025-05-01 13:49:33', 'test5', 'test5', '2025-05-01 15:49:00'),
+(24, 'ANNOUNCEMENT', '2025-05-01 13:50:47', 'test1', 'test1', '2025-05-01 13:52:00'),
+(28, 'ANNOUNCEMENT', '2025-05-05 14:16:53', 'hatdog', 'hatdog', '2025-05-18 18:20:00');
 
 -- --------------------------------------------------------
 
@@ -62,6 +67,32 @@ INSERT INTO `departments` (`department_id`, `department_name`) VALUES
 (86, 'Accounting'),
 (104, 'IT'),
 (105, 'Marketing');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `exams`
+--
+
+CREATE TABLE `exams` (
+  `exam_id` int(11) NOT NULL,
+  `exam_title` varchar(255) NOT NULL,
+  `department` varchar(255) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `duration` time(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `exams`
+--
+
+INSERT INTO `exams` (`exam_id`, `exam_title`, `department`, `description`, `duration`) VALUES
+(1, 'Test Title', 'Test Department', 'TEST', '00:00:00.0'),
+(2, 'asd', '86', '', '00:00:00.0'),
+(3, 'C Programming', '104', '', '00:00:00.0'),
+(4, 'Java', '104', 'Break it down', '00:00:00.0'),
+(5, 'Java', 'IT', 'Break it down', '00:00:00.0'),
+(6, 'C Programming', 'Marketing', 'adawd', '01:00:00.0');
 
 -- --------------------------------------------------------
 
@@ -136,6 +167,12 @@ ALTER TABLE `departments`
   ADD PRIMARY KEY (`department_id`);
 
 --
+-- Indexes for table `exams`
+--
+ALTER TABLE `exams`
+  ADD PRIMARY KEY (`exam_id`);
+
+--
 -- Indexes for table `memos`
 --
 ALTER TABLE `memos`
@@ -156,13 +193,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
-  MODIFY `announcement_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `announcement_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
   MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+
+--
+-- AUTO_INCREMENT for table `exams`
+--
+ALTER TABLE `exams`
+  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `memos`

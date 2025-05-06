@@ -35,21 +35,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
             
-            // Verify password (plain text comparison - consider upgrading to password_hash())
             if ($user['password'] === $password) {
-                // Set session variables
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['full_name'] = $user['full_name'];
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['department'] = $user['department'];
                 $_SESSION['UID'] = $user['UID'];
 
-                // Redirect based on role
                 if ($user['role'] === 'Admin') {
                     header("Location: ./admin/admin.php");
                     exit();
                 } else {
-                    // Sanitize department name for folder path
                     $sanitized_dept = preg_replace('/[^A-Za-z0-9_-]/', '_', $user['department']);
                     $department_path = "./departments/$sanitized_dept/dashboard.php";
                     
@@ -135,13 +131,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <input type="text" name="uid" class="form-control" id="uid" 
                  placeholder="99999" required
                  value="<?php echo htmlspecialchars($uid); ?>">
-          <label for="uid">UID</label>
+          <label for="uid">USER</label>
         </div>
 
         <div class="form-floating mb-4">
           <input type="password" name="password" class="form-control" 
                  id="password" placeholder="Password" required>
-          <label for="password">Password</label>
+          <label for="password">PASSWORD</label>
         </div>
 
         <button class="btn btn-primary w-100 py-2 mb-3" type="submit">Sign in</button>
@@ -150,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <a href="#" class="text-decoration-none">Forgot password?</a>
         </div>
         
-        <p class="mt-4 mb-0 text-muted text-center">© 2024 5BDF Corporation</p>
+        <p class="mt-4 mb-0 text-muted text-center">© 2025 5BDF Corporation</p>
       </form>
     </div>
   </main>

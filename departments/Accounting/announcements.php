@@ -67,57 +67,44 @@ require_once '../../db/dbcon.php';
             <h2 class="m-0">Announcements</h2>
         </div>
         <div class="col-md-4 text-center">
-            <input type="text" class="form-control" id="searchInput" placeholder="Search Memo..." onkeyup="filterMemos()">
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="./sent.php" class="btn btn-secondary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
-                    <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z"/>
-                    <path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z"/>
-                    <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/>
-                </svg>
-            </a>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-send" viewBox="0 0 16 16">
-                    <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
-                </svg>
-            </button>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search Announcement..." onkeyup="filterMemos()">
         </div>
     </div>
 
     <table class="table table-striped table-bordered" id="memosTable">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Action</th>
+              <th>Date</th>
+              <th>Title</th>
+              <th>Action</th>
             </tr>
         </thead>
         <tbody>
-            <?php if (count($memos) > 0): ?>
-                <?php foreach ($memos as $memo): ?>
-                    <tr>
-                        <td style="<?= $memo['is_downloaded'] ? '' : 'font-weight: bold;' ?>">
-                            <?= htmlspecialchars($memo['description']) ?>
-                        </td>
-                        <td><?= htmlspecialchars($memo['from_department']) ?></td>
-                        <td><?= htmlspecialchars($memo['to_department']) ?></td>
-                        <td><?= date('Y-m-d H:i:s', strtotime($memo['datetime_sent'])) ?></td>
-                        <td>
-                            <?php if ($memo['file_path']): ?>
-                                <a href="?download_memo_id=<?= $memo['memo_id'] ?>" class="btn btn-primary">Download</a>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="5" class="text-center">No memos found.</td>
-                </tr>
-            <?php endif; ?>
+
         </tbody>
     </table>
 </div>
+<script>
+  function filterAnnouncements() {
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById('searchInput');
+    filter = input.value.toLowerCase();
+    table = document.querySelector('table');
+    tr = table.getElementsByTagName('tr');
+
+    for (i = 1; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName('td');
+      if (td.length > 0) {
+        txtValue = td[1].textContent || td[1].innerText;
+        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
 </body>
 </html>
