@@ -1,25 +1,48 @@
 <?php
 session_start();
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../index.php");
     exit();
 }
+
 require_once '../db/dbcon.php';
 
-$exam_id = $_GET['exam_id'];
-$sql = "SELECT * FROM exams WHERE exam_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $exam_id);
-$stmt->execute();
-$result = $stmt->get_result();
+$exam_id = $_GET['exam_id'] ?? null;
+$exam = null;
 
-if ($result->num_rows > 0) {
-    $exam = $result->fetch_assoc();
-} else {
-    echo "No exam found!";
+if ($exam_id) {
+    $sql = "SELECT * FROM exams WHERE exam_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $exam_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $exam = $result->fetch_assoc();
+    } else {
+        echo "No exam found!";
+    }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_item'])) {
+    $item_id = $_POST['delete_item'];
+    
+    // Prepare DELETE query
+    $delete_sql = "DELETE FROM exam_items WHERE item_id = ?";
+    $stmt = $conn->prepare($delete_sql);
+    $stmt->bind_param("i", $item_id);
+
+    // Execute and handle success/error
+    if ($stmt->execute()) {
+        header("Location: exam-items.php?exam_id=$exam_id&status=item_deleted");
+        exit();
+    } else {
+        echo "Error deleting item: " . $conn->error;
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_exam'])) {
     $exam_id = $_POST['exam_id'];
     $exam_title = $_POST['exam_title'];
     $exam_department = $_POST['exam_department'];
@@ -42,16 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Fetch exam items
 $items_query = "SELECT * FROM exam_items WHERE exam_id = ?";
 $stmt = $conn->prepare($items_query);
 $stmt->bind_param("i", $exam_id);
 $stmt->execute();
 $items_result = $stmt->get_result();
 $questions = $items_result->fetch_all(MYSQLI_ASSOC);
-
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -205,93 +226,99 @@ $questions = $items_result->fetch_all(MYSQLI_ASSOC);
             <p class="card-text">Number of Questions: <span id="questionCount"><?= count($questions) ?></span></p>
           </div>
 
-          <div style="max-height: 350px; overflow-y: auto;">
-            <?php if (count($questions) > 0): ?>
-              <ol class="pe-2">
-                <?php foreach ($questions as $q): ?>
-                  <li class="mb-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                      <strong><?= htmlspecialchars($q['question']) ?></strong>
-                      <div>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#questionModal<?= $q['item_id'] ?>">Update</button>
-                        <a href="delete-question.php?id=<?= $q['item_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this question?');">Delete</a>
-                      </div>
+  <div style="max-height: 350px; overflow-y: auto;">
+    <?php if (count($questions) > 0): ?>
+      <ol class="pe-2">
+        <?php foreach ($questions as $q): ?>
+          <li class="mb-3">
+            <div class="d-flex justify-content-between align-items-start">
+              <strong><?= htmlspecialchars($q['question']) ?></strong>
+              <div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#questionModal<?= $q['item_id'] ?>">Update</button>
+                <form method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                  <!-- Corrected the reference to $q['item_id'] -->
+                  <input type="hidden" name="delete_item" value="<?= $q['item_id'] ?>">
+                  <input type="hidden" name="exam_id" value="<?= $exam_id ?>">
+                  <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+              </div>
+            </div>
+            <ul class="mt-2">
+              <li>A. <?= htmlspecialchars($q['option_a']) ?></li>
+              <li>B. <?= htmlspecialchars($q['option_b']) ?></li>
+              <li>C. <?= htmlspecialchars($q['option_c']) ?></li>
+              <li>D. <?= htmlspecialchars($q['option_d']) ?></li>
+            </ul>
+            <p class="text-success"><em>Correct Answer: <?= strtoupper($q['correct_option']) ?></em></p>
+            <hr>
+          </li>
+
+          <!-- Update Question Modal -->
+          <div class="modal fade" id="questionModal<?= $q['item_id'] ?>" tabindex="-1" aria-labelledby="questionModalLabel<?= $q['item_id'] ?>" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <form action="update-question.php" method="POST">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="questionModalLabel<?= $q['item_id'] ?>">Question Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+
+                  <div class="modal-body">
+                    <input type="hidden" name="item_id" value="<?= $q['item_id'] ?>">
+                    <input type="hidden" name="exam_id" value="<?= $q['exam_id'] ?>">
+
+                    <div class="mb-3">
+                      <label for="questionText<?= $q['item_id'] ?>" class="form-label"><strong>Question</strong></label>
+                      <input type="text" class="form-control" id="questionText<?= $q['item_id'] ?>" name="question" value="<?= htmlspecialchars($q['question']) ?>" required>
                     </div>
-                    <ul class="mt-2">
-                      <li>A. <?= htmlspecialchars($q['option_a']) ?></li>
-                      <li>B. <?= htmlspecialchars($q['option_b']) ?></li>
-                      <li>C. <?= htmlspecialchars($q['option_c']) ?></li>
-                      <li>D. <?= htmlspecialchars($q['option_d']) ?></li>
-                    </ul>
-                    <p class="text-success"><em>Correct Answer: <?= strtoupper($q['correct_option']) ?></em></p>
+
+                    <div class="mb-3">
+                      <label for="optionA<?= $q['item_id'] ?>" class="form-label"><strong>Option A</strong></label>
+                      <input type="text" class="form-control" id="optionA<?= $q['item_id'] ?>" name="option_a" value="<?= htmlspecialchars($q['option_a']) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="optionB<?= $q['item_id'] ?>" class="form-label"><strong>Option B</strong></label>
+                      <input type="text" class="form-control" id="optionB<?= $q['item_id'] ?>" name="option_b" value="<?= htmlspecialchars($q['option_b']) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="optionC<?= $q['item_id'] ?>" class="form-label"><strong>Option C</strong></label>
+                      <input type="text" class="form-control" id="optionC<?= $q['item_id'] ?>" name="option_c" value="<?= htmlspecialchars($q['option_c']) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="optionD<?= $q['item_id'] ?>" class="form-label"><strong>Option D</strong></label>
+                      <input type="text" class="form-control" id="optionD<?= $q['item_id'] ?>" name="option_d" value="<?= htmlspecialchars($q['option_d']) ?>" required>
+                    </div>
+
                     <hr>
-                  </li>
 
-                  <!-- Update Question Modal -->
-                  <div class="modal fade" id="questionModal<?= $q['item_id'] ?>" tabindex="-1" aria-labelledby="questionModalLabel<?= $q['item_id'] ?>" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                      <div class="modal-content">
-                        <form action="update-question.php" method="POST">
-                          <div class="modal-header">
-                            <h5 class="modal-title" id="questionModalLabel<?= $q['item_id'] ?>">Question Details</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                          </div>
-
-                          <div class="modal-body">
-                            <input type="hidden" name="item_id" value="<?= $q['item_id'] ?>">
-                            <input type="hidden" name="exam_id" value="<?= $q['exam_id'] ?>">
-
-                            <div class="mb-3">
-                              <label for="questionText<?= $q['item_id'] ?>" class="form-label"><strong>Question</strong></label>
-                              <input type="text" class="form-control" id="questionText<?= $q['item_id'] ?>" name="question" value="<?= htmlspecialchars($q['question']) ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                              <label for="optionA<?= $q['item_id'] ?>" class="form-label"><strong>Option A</strong></label>
-                              <input type="text" class="form-control" id="optionA<?= $q['item_id'] ?>" name="option_a" value="<?= htmlspecialchars($q['option_a']) ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                              <label for="optionB<?= $q['item_id'] ?>" class="form-label"><strong>Option B</strong></label>
-                              <input type="text" class="form-control" id="optionB<?= $q['item_id'] ?>" name="option_b" value="<?= htmlspecialchars($q['option_b']) ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                              <label for="optionC<?= $q['item_id'] ?>" class="form-label"><strong>Option C</strong></label>
-                              <input type="text" class="form-control" id="optionC<?= $q['item_id'] ?>" name="option_c" value="<?= htmlspecialchars($q['option_c']) ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                              <label for="optionD<?= $q['item_id'] ?>" class="form-label"><strong>Option D</strong></label>
-                              <input type="text" class="form-control" id="optionD<?= $q['item_id'] ?>" name="option_d" value="<?= htmlspecialchars($q['option_d']) ?>" required>
-                            </div>
-
-                            <hr>
-
-                            <div class="mb-3">
-                              <label for="correctOption<?= $q['item_id'] ?>" class="form-label"><strong>Correct Option</strong></label>
-                              <select class="form-select" id="correctOption<?= $q['item_id'] ?>" name="correct_option" required>
-                                <option value="A" <?= $q['correct_option'] === 'A' ? 'selected' : '' ?>>A</option>
-                                <option value="B" <?= $q['correct_option'] === 'B' ? 'selected' : '' ?>>B</option>
-                                <option value="C" <?= $q['correct_option'] === 'C' ? 'selected' : '' ?>>C</option>
-                                <option value="D" <?= $q['correct_option'] === 'D' ? 'selected' : '' ?>>D</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Update</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                          </div>
-                        </form>
-                      </div>
+                    <div class="mb-3">
+                      <label for="correctOption<?= $q['item_id'] ?>" class="form-label"><strong>Correct Option</strong></label>
+                      <select class="form-select" id="correctOption<?= $q['item_id'] ?>" name="correct_option" required>
+                        <option value="A" <?= $q['correct_option'] === 'A' ? 'selected' : '' ?>>A</option>
+                        <option value="B" <?= $q['correct_option'] === 'B' ? 'selected' : '' ?>>B</option>
+                        <option value="C" <?= $q['correct_option'] === 'C' ? 'selected' : '' ?>>C</option>
+                        <option value="D" <?= $q['correct_option'] === 'D' ? 'selected' : '' ?>>D</option>
+                      </select>
                     </div>
                   </div>
 
-                <?php endforeach; ?>
-              </ol>
-            <?php endif; ?>
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
+
+      <?php endforeach; ?>
+    </ol>
+  <?php endif; ?>
+</div>
+
       </div>
     </div>
   </main>
