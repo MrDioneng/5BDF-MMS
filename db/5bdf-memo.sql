@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 05, 2025 at 08:32 AM
+-- Generation Time: May 17, 2025 at 04:50 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -66,7 +66,9 @@ CREATE TABLE `departments` (
 INSERT INTO `departments` (`department_id`, `department_name`) VALUES
 (86, 'Accounting'),
 (104, 'IT'),
-(105, 'Marketing');
+(105, 'Marketing'),
+(106, 'HR'),
+(107, 'operations');
 
 -- --------------------------------------------------------
 
@@ -79,7 +81,7 @@ CREATE TABLE `exams` (
   `exam_title` varchar(255) NOT NULL,
   `department` varchar(255) NOT NULL,
   `description` varchar(255) NOT NULL,
-  `duration` time(1) NOT NULL
+  `duration` time NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -87,12 +89,53 @@ CREATE TABLE `exams` (
 --
 
 INSERT INTO `exams` (`exam_id`, `exam_title`, `department`, `description`, `duration`) VALUES
-(1, 'Test Title', 'Test Department', 'TEST', '00:00:00.0'),
-(2, 'asd', '86', '', '00:00:00.0'),
-(3, 'C Programming', '104', '', '00:00:00.0'),
-(4, 'Java', '104', 'Break it down', '00:00:00.0'),
-(5, 'Java', 'IT', 'Break it down', '00:00:00.0'),
-(6, 'C Programming', 'Marketing', 'adawd', '01:00:00.0');
+(12, 'C Programming', 'I.T', 'Mag exam mog loops ni sir Rod', '00:30:00'),
+(13, 'To Marketing', 'operations', 'asd viot', '01:30:00'),
+(14, 'To accounting', 'Accounting', 'Break it down', '01:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `exam_answers`
+--
+
+CREATE TABLE `exam_answers` (
+  `answer_id` int(11) NOT NULL,
+  `result_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `user_answer` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `exam_items`
+--
+
+CREATE TABLE `exam_items` (
+  `item_id` int(11) NOT NULL,
+  `exam_id` int(11) NOT NULL,
+  `question` text NOT NULL,
+  `option_a` varchar(255) NOT NULL,
+  `option_b` varchar(255) NOT NULL,
+  `option_c` varchar(255) NOT NULL,
+  `option_d` varchar(255) NOT NULL,
+  `correct_option` enum('A','B','C','D') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `exam_results`
+--
+
+CREATE TABLE `exam_results` (
+  `result_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `exam_id` int(11) NOT NULL,
+  `score` int(11) NOT NULL,
+  `taken_on` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -173,6 +216,29 @@ ALTER TABLE `exams`
   ADD PRIMARY KEY (`exam_id`);
 
 --
+-- Indexes for table `exam_answers`
+--
+ALTER TABLE `exam_answers`
+  ADD PRIMARY KEY (`answer_id`),
+  ADD KEY `result_id` (`result_id`),
+  ADD KEY `item_id` (`item_id`);
+
+--
+-- Indexes for table `exam_items`
+--
+ALTER TABLE `exam_items`
+  ADD PRIMARY KEY (`item_id`),
+  ADD KEY `exam_id` (`exam_id`);
+
+--
+-- Indexes for table `exam_results`
+--
+ALTER TABLE `exam_results`
+  ADD PRIMARY KEY (`result_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `exam_id` (`exam_id`);
+
+--
 -- Indexes for table `memos`
 --
 ALTER TABLE `memos`
@@ -199,13 +265,31 @@ ALTER TABLE `announcements`
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-  MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+  MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- AUTO_INCREMENT for table `exams`
 --
 ALTER TABLE `exams`
-  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `exam_answers`
+--
+ALTER TABLE `exam_answers`
+  MODIFY `answer_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `exam_items`
+--
+ALTER TABLE `exam_items`
+  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `exam_results`
+--
+ALTER TABLE `exam_results`
+  MODIFY `result_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `memos`
@@ -218,6 +302,30 @@ ALTER TABLE `memos`
 --
 ALTER TABLE `users`
   MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `exam_answers`
+--
+ALTER TABLE `exam_answers`
+  ADD CONSTRAINT `exam_answers_ibfk_1` FOREIGN KEY (`result_id`) REFERENCES `exam_results` (`result_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `exam_answers_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `exam_items` (`item_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `exam_items`
+--
+ALTER TABLE `exam_items`
+  ADD CONSTRAINT `exam_items_ibfk_1` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `exam_results`
+--
+ALTER TABLE `exam_results`
+  ADD CONSTRAINT `exam_results_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `exam_results_ibfk_2` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
