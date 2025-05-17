@@ -84,7 +84,7 @@ $duration = isset($_GET['duration']) ? $_GET['duration'] : '00:30:00'; // fallba
           <div class="col-6 col-md-4 d-flex justify-content-center">
             <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0 text-small">
               <li class="nav-item mx-3 text-center">
-                <a href="memo.php" class="nav-link text-white">
+                <a href="memo.php" class="nav-link text-white exam-nav-link">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-file-earmark-fill" viewBox="0 0 16 16">
                     <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z"/>
                   </svg>
@@ -160,18 +160,31 @@ $duration = isset($_GET['duration']) ? $_GET['duration'] : '00:30:00'; // fallba
       <?php endif; ?>
     </div>
 
-
+    <div class="modal fade" id="timesUpModal" tabindex="-1" aria-labelledby="timesUpLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+          <div class="modal-header">
+            <h5 class="modal-title" id="timesUpLabel">Time's Up!</h5>
+          </div>
+          <div class="modal-body">
+            The exam time has ended. Your answers will now be submitted automatically.
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="submitExamBtn" class="btn btn-primary">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
 <script>
+  const examId = "<?php echo $exam_id; ?>";
   const durationStr = "<?php echo $duration; ?>"; // e.g., "01:00:00"
+  const timerDisplay = document.getElementById('time-remaining');
 
   function parseDuration(hms) {
     const [hours, minutes, seconds] = hms.split(':').map(Number);
     return (hours * 3600) + (minutes * 60) + seconds;
   }
-
-  let timeLeft = parseDuration(durationStr);
-  const timerDisplay = document.getElementById('time-remaining');
 
   function formatTime(seconds) {
     const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -180,19 +193,48 @@ $duration = isset($_GET['duration']) ? $_GET['duration'] : '00:30:00'; // fallba
     return `${hrs}:${mins}:${secs}`;
   }
 
+  function getRemainingTime() {
+    const now = Math.floor(Date.now() / 1000);
+    const storedStart = localStorage.getItem(`exam_${examId}_start`);
+    const durationSeconds = parseDuration(durationStr);
+
+    if (storedStart) {
+      const elapsed = now - parseInt(storedStart);
+      return Math.max(durationSeconds - elapsed, 0);
+    } else {
+      // First time loading the page
+      localStorage.setItem(`exam_${examId}_start`, now);
+      return durationSeconds;
+    }
+  }
+
+  let timeLeft = getRemainingTime();
+
   function updateTimer() {
     timerDisplay.textContent = formatTime(timeLeft);
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       alert("Time's up! Submitting your answers.");
+      window.removeEventListener("beforeunload", beforeUnloadHandler);
+      localStorage.removeItem(`exam_${examId}_start`);
       document.querySelector('form').submit();
     }
     timeLeft--;
   }
 
+  function beforeUnloadHandler(e) {
+    e.preventDefault();
+    e.returnValue = "You are currently taking an exam. Are you sure you want to leave?";
+    return '';
+  }
+
+  window.addEventListener("beforeunload", beforeUnloadHandler);
+
   updateTimer();
   const timerInterval = setInterval(updateTimer, 1000);
 </script>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
 </body>
 </html>
