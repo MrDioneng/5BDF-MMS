@@ -21,45 +21,52 @@ if ($exam_id) {
     if ($result->num_rows > 0) {
         $exam = $result->fetch_assoc();
     } else {
-        echo "No exam found!";
+        header("Location: manage-exams.php?status=exam_not_found");
+        exit();
     }
+} else {
+    header("Location: manage-exams.php?status=missing_exam_id");
+    exit();
 }
 
+// Handle delete item request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_item'])) {
     $item_id = $_POST['delete_item'];
-    
-    // Prepare DELETE query
+
     $delete_sql = "DELETE FROM exam_items WHERE item_id = ?";
     $stmt = $conn->prepare($delete_sql);
     $stmt->bind_param("i", $item_id);
 
-    // Execute and handle success/error
     if ($stmt->execute()) {
-        header("Location: exam-items.php?exam_id=$exam_id&status=item_deleted");
+        header("Location: exam-items.php?exam_id=" . urlencode($exam_id) . "&status=item_deleted");
         exit();
     } else {
-        echo "Error deleting item: " . $conn->error;
+        echo "Error deleting item: " . $stmt->error;
+        exit();
     }
 }
 
+// Handle update exam request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_exam'])) {
-    $exam_id = $_POST['exam_id'];
-    $exam_title = $_POST['exam_title'];
-    $exam_department = $_POST['exam_department'];
-    $exam_duration = $_POST['exam_duration'];
-    $exam_description = $_POST['exam_description'];
+    $exam_id = $_POST['exam_id'] ?? null;
+    $exam_title = $_POST['exam_title'] ?? '';
+    $exam_department = $_POST['exam_department'] ?? '';
+    $exam_duration = $_POST['exam_duration'] ?? '';
+    $exam_description = $_POST['exam_description'] ?? '';
 
     if ($exam_id) {
         $query = "UPDATE exams SET exam_title = ?, department = ?, duration = ?, description = ? WHERE exam_id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("ssssi", $exam_title, $exam_department, $exam_duration, $exam_description, $exam_id);
-        $stmt->execute();
 
-        // Redirect after successful update
-        header("Location: manage-exams.php?status=success");
-        exit();
+        if ($stmt->execute()) {
+            header("Location: manage-exams.php?status=success");
+            exit();
+        } else {
+            echo "Error updating exam: " . $stmt->error;
+            exit();
+        }
     } else {
-        // Redirect with error
         header("Location: manage-exams.php?status=missing_id");
         exit();
     }
@@ -73,6 +80,7 @@ $stmt->execute();
 $items_result = $stmt->get_result();
 $questions = $items_result->fetch_all(MYSQLI_ASSOC);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -182,146 +190,191 @@ $questions = $items_result->fetch_all(MYSQLI_ASSOC);
       </ul>
     </div>
 
+<div class="flex-grow-1 p-4">
+  <div class="d-flex justify-content-center gap-4 flex-wrap">
+    <?php if (!empty($exam)): ?>
+      <div class="card" style="width: 45%;">
+        <div class="card-body">
+          <h5 class="card-title border-bottom pb-3">Edit Exam Information</h5>
+          <form>
+            <div class="mb-3">
+              <input type="hidden" id="exam_id" name="exam_id" value="<?php echo htmlspecialchars($exam['exam_id']); ?>" required>
 
-    <div class="flex-grow-1 p-4">
-      <div class="d-flex justify-content-center">
-        <?php if (!empty($exam)): ?>
-        <div class="card w-50 mx-2">
-            <div class="card-body">
-                <h5 class="card-title border-bottom pb-3">Edit Exam Information</h5>
-                <form action="exam-items.php" method="POST">
-                    <div class="mb-3">
-                        <input hidden type="text" class="form-control" id="exam_id" name="exam_id" value="<?php echo htmlspecialchars($exam['exam_id']); ?>" required>
-
-                        <label for="exam_title" class="form-label">Exam Title</label>
-                        <input type="text" class="form-control" id="exam_title" name="exam_title" value="<?php echo htmlspecialchars($exam['exam_title']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="exam_department" class="form-label">Department</label>
-                        <input type="text" class="form-control" id="exam_department" name="exam_department" value="<?php echo htmlspecialchars($exam['department']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="exam_duration" class="form-label">Exam Duration</label>
-                        <input type="text" class="form-control" id="exam_duration" name="exam_duration" value="<?php echo htmlspecialchars($exam['duration']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="exam_description" class="form-label">Exam Description</label>
-                        <input type="text" class="form-control" id="exam_description" name="exam_description" value="<?php echo htmlspecialchars($exam['description']); ?>" required>
-                    </div>
-                    <button type="submit" href="exam-items.php?exam_id=<?php echo $row['exam_id']; ?>" class="btn btn-primary">Update Exam</button>
-                </form>
+              <label for="exam_title" class="form-label">Exam Title</label>
+              <input type="text" class="form-control" id="exam_title" name="exam_title" value="<?php echo htmlspecialchars($exam['exam_title']); ?>" disabled>
             </div>
+            <div class="mb-3">
+              <label for="exam_department" class="form-label">Department</label>
+              <input type="text" class="form-control" id="exam_department" name="exam_department" value="<?php echo htmlspecialchars($exam['department']); ?>" disabled>
+            </div>
+            <div class="mb-3">
+              <label for="exam_duration" class="form-label">Exam Duration</label>
+              <input type="text" class="form-control" id="exam_duration" name="exam_duration" value="<?php echo htmlspecialchars($exam['duration']); ?>" disabled>
+            </div>
+            <div class="mb-3">
+              <label for="exam_description" class="form-label">Exam Description</label>
+              <input type="text" class="form-control" id="exam_description" name="exam_description" value="<?php echo htmlspecialchars($exam['description']); ?>" disabled>
+            </div>
+
+            <!-- Button to open the modal -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateExamModal<?php echo $exam['exam_id']; ?>">
+              Update Exam
+            </button>
+          </form>
         </div>
+      </div>
+
+      <!-- Update Modal -->
+      <div class="modal fade" id="updateExamModal<?php echo $exam['exam_id']; ?>" tabindex="-1" aria-labelledby="updateExamLabel<?php echo $exam['exam_id']; ?>" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form action="update-exam.php" method="POST">
+              <div class="modal-header">
+                <h5 class="modal-title" id="updateExamLabel<?php echo $exam['exam_id']; ?>">Update Exam</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" name="exam_id" value="<?php echo $exam['exam_id']; ?>">
+
+                <div class="mb-3">
+                  <label for="exam_title_<?php echo $exam['exam_id']; ?>" class="form-label">Exam Title</label>
+                  <input type="text" class="form-control" id="exam_title_<?php echo $exam['exam_id']; ?>" name="exam_title" value="<?php echo htmlspecialchars($exam['exam_title']); ?>" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="exam_department_<?php echo $exam['exam_id']; ?>" class="form-label">Department</label>
+                  <input type="text" class="form-control" id="exam_department_<?php echo $exam['exam_id']; ?>" name="exam_department" value="<?php echo htmlspecialchars($exam['department']); ?>" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="exam_duration_<?php echo $exam['exam_id']; ?>" class="form-label">Exam Duration</label>
+                  <input type="text" class="form-control" id="exam_duration_<?php echo $exam['exam_id']; ?>" name="exam_duration" value="<?php echo htmlspecialchars($exam['duration']); ?>" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="exam_description_<?php echo $exam['exam_id']; ?>" class="form-label">Exam Description</label>
+                  <input type="text" class="form-control" id="exam_description_<?php echo $exam['exam_id']; ?>" name="exam_description" value="<?php echo htmlspecialchars($exam['description']); ?>" required>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Save Changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    <div class="card" style="width: 45%;">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">Exam Questions</h5>
+          <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+            Add Question
+          </button>
+        </div>
+        <p class="card-text">Number of Questions: <span id="questionCount"><?= count($questions) ?></span></p>
+      </div>
+
+      <div style="max-height: 350px; overflow-y: auto;">
+        <?php if (count($questions) > 0): ?>
+          <ol class="pe-2">
+            <?php foreach ($questions as $q): ?>
+              <li class="mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <strong><?= htmlspecialchars($q['question']) ?></strong>
+                  <div>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#questionModal<?= $q['item_id'] ?>">Update</button>
+                    <form method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                      <input type="hidden" name="delete_item" value="<?= $q['item_id'] ?>">
+                      <input type="hidden" name="exam_id" value="<?= $exam_id ?>">
+                      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </div>
+                <ul class="mt-2">
+                  <li>A. <?= htmlspecialchars($q['option_a']) ?></li>
+                  <li>B. <?= htmlspecialchars($q['option_b']) ?></li>
+                  <li>C. <?= htmlspecialchars($q['option_c']) ?></li>
+                  <li>D. <?= htmlspecialchars($q['option_d']) ?></li>
+                </ul>
+                <p class="text-success"><em>Correct Answer: <?= strtoupper($q['correct_option']) ?></em></p>
+                <hr>
+              </li>
+
+              <!-- Update Question Modal -->
+              <div class="modal fade" id="questionModal<?= $q['item_id'] ?>" tabindex="-1" aria-labelledby="questionModalLabel<?= $q['item_id'] ?>" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content">
+                    <form action="update-question.php" method="POST">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="questionModalLabel<?= $q['item_id'] ?>">Question Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+
+                      <div class="modal-body">
+                        <input type="hidden" name="item_id" value="<?= $q['item_id'] ?>">
+                        <input type="hidden" name="exam_id" value="<?= $q['exam_id'] ?>">
+
+                        <div class="mb-3">
+                          <label for="questionText<?= $q['item_id'] ?>" class="form-label"><strong>Question</strong></label>
+                          <input type="text" class="form-control" id="questionText<?= $q['item_id'] ?>" name="question" value="<?= htmlspecialchars($q['question']) ?>" required>
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="optionA<?= $q['item_id'] ?>" class="form-label"><strong>Option A</strong></label>
+                          <input type="text" class="form-control" id="optionA<?= $q['item_id'] ?>" name="option_a" value="<?= htmlspecialchars($q['option_a']) ?>" required>
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="optionB<?= $q['item_id'] ?>" class="form-label"><strong>Option B</strong></label>
+                          <input type="text" class="form-control" id="optionB<?= $q['item_id'] ?>" name="option_b" value="<?= htmlspecialchars($q['option_b']) ?>" required>
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="optionC<?= $q['item_id'] ?>" class="form-label"><strong>Option C</strong></label>
+                          <input type="text" class="form-control" id="optionC<?= $q['item_id'] ?>" name="option_c" value="<?= htmlspecialchars($q['option_c']) ?>" required>
+                        </div>
+
+                        <div class="mb-3">
+                          <label for="optionD<?= $q['item_id'] ?>" class="form-label"><strong>Option D</strong></label>
+                          <input type="text" class="form-control" id="optionD<?= $q['item_id'] ?>" name="option_d" value="<?= htmlspecialchars($q['option_d']) ?>" required>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                          <label for="correctOption<?= $q['item_id'] ?>" class="form-label"><strong>Correct Option</strong></label>
+                          <select class="form-select" id="correctOption<?= $q['item_id'] ?>" name="correct_option" required>
+                            <option value="A" <?= $q['correct_option'] === 'A' ? 'selected' : '' ?>>A</option>
+                            <option value="B" <?= $q['correct_option'] === 'B' ? 'selected' : '' ?>>B</option>
+                            <option value="C" <?= $q['correct_option'] === 'C' ? 'selected' : '' ?>>C</option>
+                            <option value="D" <?= $q['correct_option'] === 'D' ? 'selected' : '' ?>>D</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </ol>
         <?php endif; ?>
-
-
-        <div class="card w-50 mx-2">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="card-title mb-0">Exam Questions</h5>
-              <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
-                Add Question
-              </button>
-            </div>
-            <p class="card-text">Number of Questions: <span id="questionCount"><?= count($questions) ?></span></p>
-          </div>
-
-  <div style="max-height: 350px; overflow-y: auto;">
-    <?php if (count($questions) > 0): ?>
-      <ol class="pe-2">
-        <?php foreach ($questions as $q): ?>
-          <li class="mb-3">
-            <div class="d-flex justify-content-between align-items-start">
-              <strong><?= htmlspecialchars($q['question']) ?></strong>
-              <div>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#questionModal<?= $q['item_id'] ?>">Update</button>
-                <form method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this item?');">
-                  <!-- Corrected the reference to $q['item_id'] -->
-                  <input type="hidden" name="delete_item" value="<?= $q['item_id'] ?>">
-                  <input type="hidden" name="exam_id" value="<?= $exam_id ?>">
-                  <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                </form>
-              </div>
-            </div>
-            <ul class="mt-2">
-              <li>A. <?= htmlspecialchars($q['option_a']) ?></li>
-              <li>B. <?= htmlspecialchars($q['option_b']) ?></li>
-              <li>C. <?= htmlspecialchars($q['option_c']) ?></li>
-              <li>D. <?= htmlspecialchars($q['option_d']) ?></li>
-            </ul>
-            <p class="text-success"><em>Correct Answer: <?= strtoupper($q['correct_option']) ?></em></p>
-            <hr>
-          </li>
-
-          <!-- Update Question Modal -->
-          <div class="modal fade" id="questionModal<?= $q['item_id'] ?>" tabindex="-1" aria-labelledby="questionModalLabel<?= $q['item_id'] ?>" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <form action="update-question.php" method="POST">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="questionModalLabel<?= $q['item_id'] ?>">Question Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <input type="hidden" name="item_id" value="<?= $q['item_id'] ?>">
-                    <input type="hidden" name="exam_id" value="<?= $q['exam_id'] ?>">
-
-                    <div class="mb-3">
-                      <label for="questionText<?= $q['item_id'] ?>" class="form-label"><strong>Question</strong></label>
-                      <input type="text" class="form-control" id="questionText<?= $q['item_id'] ?>" name="question" value="<?= htmlspecialchars($q['question']) ?>" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="optionA<?= $q['item_id'] ?>" class="form-label"><strong>Option A</strong></label>
-                      <input type="text" class="form-control" id="optionA<?= $q['item_id'] ?>" name="option_a" value="<?= htmlspecialchars($q['option_a']) ?>" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="optionB<?= $q['item_id'] ?>" class="form-label"><strong>Option B</strong></label>
-                      <input type="text" class="form-control" id="optionB<?= $q['item_id'] ?>" name="option_b" value="<?= htmlspecialchars($q['option_b']) ?>" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="optionC<?= $q['item_id'] ?>" class="form-label"><strong>Option C</strong></label>
-                      <input type="text" class="form-control" id="optionC<?= $q['item_id'] ?>" name="option_c" value="<?= htmlspecialchars($q['option_c']) ?>" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="optionD<?= $q['item_id'] ?>" class="form-label"><strong>Option D</strong></label>
-                      <input type="text" class="form-control" id="optionD<?= $q['item_id'] ?>" name="option_d" value="<?= htmlspecialchars($q['option_d']) ?>" required>
-                    </div>
-
-                    <hr>
-
-                    <div class="mb-3">
-                      <label for="correctOption<?= $q['item_id'] ?>" class="form-label"><strong>Correct Option</strong></label>
-                      <select class="form-select" id="correctOption<?= $q['item_id'] ?>" name="correct_option" required>
-                        <option value="A" <?= $q['correct_option'] === 'A' ? 'selected' : '' ?>>A</option>
-                        <option value="B" <?= $q['correct_option'] === 'B' ? 'selected' : '' ?>>B</option>
-                        <option value="C" <?= $q['correct_option'] === 'C' ? 'selected' : '' ?>>C</option>
-                        <option value="D" <?= $q['correct_option'] === 'D' ? 'selected' : '' ?>>D</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Update</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
-      <?php endforeach; ?>
-    </ol>
-  <?php endif; ?>
-</div>
-
       </div>
     </div>
+  </div>
+</div>
+
+    </div>
   </main>
+
+
 
   <!-- Add Question Modal -->
   <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
@@ -383,10 +436,7 @@ $questions = $items_result->fetch_all(MYSQLI_ASSOC);
 
 
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-X..." crossorigin="anonymous"></script>
 
-  
-
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
 </body>
 </html>
